@@ -315,7 +315,7 @@
 \f\r"'\`<>=]|("|')|))|$)`, "g");
   var p2 = /'/g;
   var g = /"/g;
-  var $2 = /^(?:script|style|textarea|title)$/i;
+  var $ = /^(?:script|style|textarea|title)$/i;
   var y2 = (t4) => (i4, ...s4) => ({ _$litType$: t4, strings: i4, values: s4 });
   var x = y2(1);
   var b2 = y2(2);
@@ -335,7 +335,7 @@
       const s5 = t4[i5];
       let a3, u3, d3 = -1, y3 = 0;
       for (; y3 < s5.length && (c4.lastIndex = y3, u3 = c4.exec(s5), null !== u3); )
-        y3 = c4.lastIndex, c4 === f2 ? "!--" === u3[1] ? c4 = v : void 0 !== u3[1] ? c4 = _ : void 0 !== u3[2] ? ($2.test(u3[2]) && (r6 = RegExp("</" + u3[2], "g")), c4 = m) : void 0 !== u3[3] && (c4 = m) : c4 === m ? ">" === u3[0] ? (c4 = r6 ?? f2, d3 = -1) : void 0 === u3[1] ? d3 = -2 : (d3 = c4.lastIndex - u3[2].length, a3 = u3[1], c4 = void 0 === u3[3] ? m : '"' === u3[3] ? g : p2) : c4 === g || c4 === p2 ? c4 = m : c4 === v || c4 === _ ? c4 = f2 : (c4 = m, r6 = void 0);
+        y3 = c4.lastIndex, c4 === f2 ? "!--" === u3[1] ? c4 = v : void 0 !== u3[1] ? c4 = _ : void 0 !== u3[2] ? ($.test(u3[2]) && (r6 = RegExp("</" + u3[2], "g")), c4 = m) : void 0 !== u3[3] && (c4 = m) : c4 === m ? ">" === u3[0] ? (c4 = r6 ?? f2, d3 = -1) : void 0 === u3[1] ? d3 = -2 : (d3 = c4.lastIndex - u3[2].length, a3 = u3[1], c4 = void 0 === u3[3] ? m : '"' === u3[3] ? g : p2) : c4 === g || c4 === p2 ? c4 = m : c4 === v || c4 === _ ? c4 = f2 : (c4 = m, r6 = void 0);
       const x2 = c4 === m && t4[i5 + 1].startsWith("/>") ? " " : "";
       l3 += c4 === f2 ? s5 + n3 : d3 >= 0 ? (o5.push(a3), s5.slice(0, d3) + e3 + s5.slice(d3) + h2 + x2) : s5 + h2 + (-2 === d3 ? i5 : x2);
     }
@@ -360,7 +360,7 @@
                 d3.push({ type: 1, index: c4, name: e5[2], strings: s5, ctor: "." === e5[1] ? k : "?" === e5[1] ? H : "@" === e5[1] ? I : R }), r6.removeAttribute(t5);
               } else
                 t5.startsWith(h2) && (d3.push({ type: 6, index: c4 }), r6.removeAttribute(t5));
-          if ($2.test(r6.tagName)) {
+          if ($.test(r6.tagName)) {
             const t5 = r6.textContent.split(h2), s5 = t5.length - 1;
             if (s5 > 0) {
               r6.textContent = i3 ? i3.emptyScript : "";
@@ -628,63 +628,60 @@
   }
 
   // srcts/index.ts
-  var customInputTag = "shiny-custom-input";
-  var ShinyCustomInput = class extends s3 {
+  var ShinyCustomOutput = class extends s3 {
     constructor() {
       super(...arguments);
-      this.value = 0;
-      /*
-       * The callback function that is called when the value of the input changes.
-       * This alerts Shiny that the value has changed and it should check for the
-       * latest value. This is set by the input binding.
-       */
-      this.onChangeCallback = null;
-    }
-    /**
-     * Function to run when the increment button is clicked.
-     */
-    onIncrement() {
-      this.value++;
-      this.onChangeCallback?.(true);
+      this.count = 0;
     }
     render() {
       return x`
-      <button @click=${this.onIncrement} part="button">increment</button>
-      <span part="display"> Value: ${this.value} </span>
+      <span part="display"> Value: ${this.count} </span>
       <slot></slot>
     `;
     }
   };
-  ShinyCustomInput.styles = i`
+  ShinyCustomOutput.styles = i`
     :host {
       display: block;
       border: solid 1px gray;
       padding: 16px;
       max-width: 800px;
-      width: fit-content;
     }
   `;
   __decorateClass([
     n4({ type: Number })
-  ], ShinyCustomInput.prototype, "value", 2);
-  ShinyCustomInput = __decorateClass([
-    t3(customInputTag)
-  ], ShinyCustomInput);
-  var CustomInputBinding = class extends Shiny.InputBinding {
-    constructor() {
-      super();
-    }
+  ], ShinyCustomOutput.prototype, "count", 2);
+  ShinyCustomOutput = __decorateClass([
+    t3("shiny-custom-output")
+  ], ShinyCustomOutput);
+  var CustomOutputBinding = class extends Shiny.OutputBinding {
+    /**
+     * Find the element that will be rendered by this output binding.
+     * @param scope The scope in which to search for the element.
+     * @returns The element that will be rendered by this output
+     * binding.
+     */
     find(scope) {
-      return $(scope).find(customInputTag);
+      return scope.find("shiny-custom-output");
     }
-    getValue(el) {
-      return el.value;
-    }
-    subscribe(el, callback) {
-      el.onChangeCallback = callback;
+    /**
+     * Function to run when rendering the output. This function will be passed the
+     * element that was found by `find()` and the payload that was sent by the
+     * server when there's new data to render. Note that the element passed may
+     * already be populated with content from a previous render and it is up to
+     * the function to clear the element and re-render the content.
+     * @param el The element that was found by `find()`
+     * @param payload An object as provided from server with the
+     * `render_custom_output` function
+     */
+    renderValue(el, payload) {
+      if (!(el instanceof ShinyCustomOutput)) {
+        return;
+      }
+      el.count = payload.value;
     }
   };
-  Shiny.inputBindings.register(new CustomInputBinding(), customInputTag);
+  Shiny.outputBindings.register(new CustomOutputBinding(), "shiny-custom-output");
 })();
 /*! Bundled license information:
 

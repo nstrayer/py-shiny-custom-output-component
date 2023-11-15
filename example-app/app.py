@@ -1,20 +1,17 @@
-# pyright: basic
-
-from shiny import ui, App, render
-
-from customInputComponent import custom_input
+from shiny import ui, App
+from customOutputComponent import render_custom_output, custom_output
 
 
 app_ui = ui.page_fluid(
-    custom_input("myInput"),
-    ui.output_text("valueOut"),
+    ui.input_slider("n", "Choose a value", 1, 20, 5),
+    custom_output("myOutput"),
 )
 
 
 def server(input, output, session):
-    @render.text
-    def valueOut():
-        return f"Value from input is {input.myInput()}"
+    @render_custom_output
+    def myOutput():
+        return input.n()
 
 
 app = App(app_ui, server)
